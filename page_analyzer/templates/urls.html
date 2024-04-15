@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+{% block content %}
+<main class="flex-grow-1">
+    <div class="container-lg mt-3">
+        <h1>Сайты</h1>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover text-nowrap" data-test="urls">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Имя</th>
+                        <th>Последняя проверка</th>
+                        <th>Код ответа</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for id, url, last_check_date, status_code in urls %}
+                    <tr>
+                        <td>{{id}}</td>
+                        <td>
+                            <a href="{{ url_for('render_url_page', id=id) }}">{{url}}</a>
+                        </td>
+                        <td>{{last_check_date}}</td>
+                        <td>{{status_code}}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+{% endblock %}
