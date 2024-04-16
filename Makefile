@@ -13,3 +13,7 @@ lint:
 
 build:
 	./build.sh
+
+selfcheck:
+	poetry check
+check: selfcheck lint

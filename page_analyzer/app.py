@@ -80,3 +80,35 @@ def add_new_page():
 
         flash('Страница уже существует', 'info')
         return redirect(url_for('render_url_page', id=id[0]))
+
+
+@app.route('/urls/<int:id>')
+def render_url_page(id):
+    conn = psycopg2.connect(DATABASE_URL)
+    with conn.cursor() as cursor:
+        cursor.execute('SELECT name, created_at FROM urls WHERE id=%s', (id,))
+        url, date = cursor.fetchone()
+        cursor.execute("""SELECT id, status_code, h1, title, description,
+                    created_at FROM url_checks WHERE url_id=%s
+                    ORDER BY id DESC""", (id,))
+        checks = cursor.fetchall()
+        normalized_checks = list(map(normalize_data, checks))
+        messages = get_flashed_messages(with_categories=True)
+        return render_template(
+            'view_page.html',
+            messages=messages,
+            url=url,
+            id=id,
+            date=date,
+            checks=normalized_checks
+        )
+
+
+@app.post('/urls/<int:id>/checks')
+def check_page(id):
+    conn = psycopg2.connect(DATABASE_URL)
+    conn.autocommit = True
+    with conn.cursor() as cursor:
+        cursor.execute('SELECT name FROM urls WHERE id=%s', (id,))
+        url = cursor.fetchone()[0]
+        return redirect(url_for('render_url_page', id=id))
