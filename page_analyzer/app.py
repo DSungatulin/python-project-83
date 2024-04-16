@@ -35,7 +35,7 @@ def normalize_data(item):
 
 
 @app.get('/urls')
-def render_add_new_page():
+def render_add_page():
     conn = psycopg2.connect(DATABASE_URL)
     with conn.cursor() as cursor:
         query = """
@@ -52,7 +52,7 @@ def render_add_new_page():
 
 
 @app.post('/urls')
-def add_new_page():
+def add_page():
     url = request.form.get('url', '')
     url_max_len = 255
     parsed_url = urlparse(url)
