@@ -1,6 +1,7 @@
 import os
 import psycopg2
 import validators
+import requests
 
 
 from dotenv import load_dotenv
@@ -111,4 +112,6 @@ def check_page(id):
     with conn.cursor() as cursor:
         cursor.execute('SELECT name FROM urls WHERE id=%s', (id,))
         url = cursor.fetchone()[0]
-        return redirect(url_for('render_url_page', id=id))
+        r = requests.get(url)
+        if (not r.raise_for_status()):
+            return redirect(url_for('render_url_page', id=id))
