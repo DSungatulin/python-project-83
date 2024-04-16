@@ -97,7 +97,7 @@ def render_url_page(id):
         normalized_checks = list(map(normalize_data, checks))
         messages = get_flashed_messages(with_categories=True)
         return render_template(
-            'view_page.html',
+            'url.html',
             messages=messages,
             url=url,
             id=id,
