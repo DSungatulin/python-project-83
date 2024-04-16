@@ -108,27 +108,37 @@ def render_url_page(id):
 
 @app.post('/urls/<int:id>/checks')
 def check_page(id):
-    conn = psycopg2.connect(DATABASE_URL)
-    conn.autocommit = True
-    with conn.cursor() as cursor:
-        cursor.execute('SELECT name FROM urls WHERE id=%s', (id,))
-        url = cursor.fetchone()[0]
-        try:
-            r = requests.get(url)
-            if (not r.raise_for_status()):
-                html = bs(r.text)
-                cursor.execute(
-                    """INSERT INTO url_checks
-                    (url_id, status_code, h1, title, description, created_at)
-                    VALUES (%s, %s, %s, %s, %s, %s);""",
-                    (id, r.status_code, html.h1.string, html.title.string,
-                     html.find(attrs={"name": "description"})['content'],
-                     date.today()))
-                flash('Страница успешно проверена', 'success')
-                return redirect(url_for('render_url_page', id=id))
-            else:
-                flash('Произошла ошибка при проверке', 'danger')
-                return redirect(url_for('render_url_page', id=id))
-        except Exception:
-            flash('Произошла ошибка при проверке', 'danger')
-            return redirect(url_for('render_url_page', id=id))
+    try:
+        conn = psycopg2.connect(DATABASE_URL)
+        conn.autocommit = True
+
+        with conn.cursor() as cursor:
+            cursor.execute('SELECT name FROM urls WHERE id=%s', (id,))
+            url = cursor.fetchone()[0]
+
+        response = requests.get(url)
+        response.raise_for_status()
+
+        html = bs(response.text, 'html.parser')
+        h1 = html.find('h1').string
+        title = html.title.string
+        description = html.find('meta', attrs={"name": "description"})['content']
+
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """INSERT INTO url_checks
+                (url_id, status_code, h1, title, description, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s);""",
+                (id, response.status_code, h1, title, description, date.today()))
+            print(cursor.fetchall())
+
+        flash('Страница успешно проверена', 'success')
+
+    except requests.exceptions.RequestException:
+        flash('Произошла ошибка при проверке', 'danger')
+
+    except psycopg2.Error:
+        flash('Произошла ошибка при проверке', 'danger')
+
+    finally:
+        return redirect(url_for('render_url_page', id=id))
