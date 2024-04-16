@@ -77,7 +77,7 @@ def add_page():
             cursor.execute('SELECT id FROM urls WHERE name=%s', (normalized_url,))
             id = cursor.fetchone()[0]
             conn.commit()
-            flash('Страница добавлена', 'success')
+            flash('Страница успешно добавлена', 'success')
             return redirect(url_for('render_url_page', id=id))
 
         flash('Страница уже существует', 'info')
