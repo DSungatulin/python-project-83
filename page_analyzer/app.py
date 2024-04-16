@@ -16,6 +16,7 @@ from flask import (
     redirect,
     url_for
 )
+from bs4 import BeautifulSoup as bs
 
 
 load_dotenv()
@@ -63,7 +64,7 @@ def add_new_page():
 
         if not validators.url(url) or len(url) > url_max_len:
             if len(url) > url_max_len:
-                flash('URL превышает максимально допустимую длину 255 символов', 'error')
+                flash('URL превышает 255 символов', 'error')
             else:
                 flash('Некорректный URL', 'error')
             messages = get_flashed_messages(with_categories=True)
@@ -105,6 +106,41 @@ def render_url_page(id):
         )
 
 
+# @app.post('/urls/<int:id>/checks')
+# def check_page(id):
+#     try:
+#         conn = psycopg2.connect(DATABASE_URL)
+#         conn.autocommit = True
+        
+#         with conn.cursor() as cursor:
+#             cursor.execute('SELECT name FROM urls WHERE id=%s', (id,))
+#             url = cursor.fetchone()[0]
+        
+#         response = requests.get(url)
+#         response.raise_for_status()
+        
+#         html = bs(response.text, 'html.parser')
+#         h1 = html.h1.string
+#         title = html.title.string
+#         description = html.find(attrs={"name": "description"})['content']
+        
+#         with conn.cursor() as cursor:
+#             cursor.execute(
+#                 """INSERT INTO url_checks
+#                 (url_id, status_code, h1, title, description, created_at)
+#                 VALUES (%s, %s, %s, %s, %s, %s);""",
+#                 (id, response.status_code, h1, title, description, date.today()))
+        
+#         flash('Страница успешно проверена', 'success')
+        
+#     except requests.exceptions.RequestException:
+#         flash('Произошла ошибка при проверке', 'danger')
+    
+#     except psycopg2.Error:
+#         flash('Произошла ошибка при проверке', 'danger')
+    
+#     finally:
+#         return redirect(url_for('render_url_page', id=id))
 @app.post('/urls/<int:id>/checks')
 def check_page(id):
     conn = psycopg2.connect(DATABASE_URL)
@@ -112,6 +148,22 @@ def check_page(id):
     with conn.cursor() as cursor:
         cursor.execute('SELECT name FROM urls WHERE id=%s', (id,))
         url = cursor.fetchone()[0]
-        r = requests.get(url)
-        if (not r.raise_for_status()):
+        try:
+            r = requests.get(url)
+            if (not r.raise_for_status()):
+                html = bs(r.text)
+                cursor.execute(
+                    """INSERT INTO url_checks
+                    (url_id, status_code, h1, title, description, created_at)
+                    VALUES (%s, %s, %s, %s, %s, %s);""",
+                    (id, r.status_code, html.h1.string, html.title.string,
+                     html.find(attrs={"name": "description"})['content'],
+                     date.today()))
+                flash('Страница успешно проверена', 'success')
+                return redirect(url_for('render_url_page', id=id))
+            else:
+                flash('Произошла ошибка при проверке', 'danger')
+                return redirect(url_for('render_url_page', id=id))
+        except Exception:
+            flash('Произошла ошибка при проверке', 'danger')
             return redirect(url_for('render_url_page', id=id))
