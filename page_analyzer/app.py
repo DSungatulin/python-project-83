@@ -31,23 +31,20 @@ def index_page():
 
 
 def normalize_data(item):
-    return [value if value else '' for value in item]
+    return list(map(lambda val: (val if val else ''), item))
+
 
 
 @app.get('/urls')
 def render_add_page():
     conn = psycopg2.connect(DATABASE_URL)
     with conn.cursor() as cursor:
-        query = """
-            SELECT urls.id, urls.name, MAX(url_checks.created_at), MAX(status_code)
-            FROM urls
-            LEFT JOIN url_checks ON urls.id = url_checks.url_id
-            GROUP BY urls.id
-            ORDER BY urls.id DESC
-        """
-        cursor.execute(query)
+        cursor.execute("""SELECT urls.id, urls.name, MAX(url_checks.created_at)
+                      , MAX(status_code) FROM urls LEFT JOIN url_checks ON
+                      urls.id=url_checks.url_id GROUP BY urls.id ORDER BY
+                      urls.id DESC""")
         urls = cursor.fetchall()
-        normalized_urls = [normalize_data(url) for url in urls]
+        normalized_urls = list(map(normalize_data, urls))
     return render_template('urls.html', urls=normalized_urls)
 
 
