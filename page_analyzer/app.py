@@ -53,7 +53,7 @@ def render_add_page():
 
 @app.post('/urls')
 def add_page():
-    url = request.form.get('url', '')
+    url = request.form.to_dict().get('url', '')
     url_max_len = 255
     parsed_url = urlparse(url)
     normalized_url = f"{parsed_url.scheme}://{parsed_url.hostname}"
@@ -61,27 +61,26 @@ def add_page():
     with conn.cursor() as cursor:
         cursor.execute('SELECT id FROM urls WHERE name=%s', (normalized_url,))
         id = cursor.fetchone()
-
-        if not validators.url(url) or len(url) > url_max_len:
-            if len(url) > url_max_len:
+        if (not validators.url(url) or len(url) > url_max_len):
+            if (len(url) > url_max_len):
                 flash('URL превышает 255 символов', 'error')
             else:
                 flash('Некорректный URL', 'error')
             messages = get_flashed_messages(with_categories=True)
             return render_template('index.html', messages=messages), 422
-
-        if not id:
+        if (not id):
             cursor.execute(
                 "INSERT INTO urls (name, created_at) VALUES (%s, %s);",
                 (normalized_url, date.today()))
-            cursor.execute('SELECT id FROM urls WHERE name=%s', (normalized_url,))
+            cursor.execute('SELECT id FROM urls WHERE name=%s',
+                           (normalized_url,))
             id = cursor.fetchone()[0]
             conn.commit()
             flash('Страница успешно добавлена', 'success')
             return redirect(url_for('render_url_page', id=id))
-
-        flash('Страница уже существует', 'info')
-        return redirect(url_for('render_url_page', id=id[0]))
+        else:
+            flash('Страница уже существует', 'info')
+            return redirect(url_for('render_url_page', id=id[0]))
 
 
 @app.route('/urls/<int:id>')
