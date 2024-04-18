@@ -38,18 +38,22 @@ def normalize_data(item):
 def render_add_page():
     conn = psycopg2.connect(DATABASE_URL)
     with conn.cursor() as cursor:
-        cursor.execute("""SELECT urls.id, urls.name, MAX(url_checks.created_at)
-                      , MAX(status_code) FROM urls LEFT JOIN url_checks ON
-                      urls.id=url_checks.url_id GROUP BY urls.id ORDER BY
-                      urls.id DESC""")
+        query = """
+            SELECT urls.id, urls.name, MAX(url_checks.created_at), MAX(status_code)
+            FROM urls
+            LEFT JOIN url_checks ON urls.id = url_checks.url_id
+            GROUP BY urls.id
+            ORDER BY urls.id DESC
+        """
+        cursor.execute(query)
         urls = cursor.fetchall()
-        normalized_urls = list(map(normalize_data, urls))
+        normalized_urls = [normalize_data(url) for url in urls]
     return render_template('urls.html', urls=normalized_urls)
 
 
 @app.post('/urls')
 def add_page():
-    url = request.form.to_dict().get('url', '')
+    url = request.form.get('url', '')
     url_max_len = 255
     parsed_url = urlparse(url)
     normalized_url = f"{parsed_url.scheme}://{parsed_url.hostname}"
@@ -57,14 +61,14 @@ def add_page():
     with conn.cursor() as cursor:
         cursor.execute('SELECT id FROM urls WHERE name=%s', (normalized_url,))
         id = cursor.fetchone()
-        if (not validators.url(url) or len(url) > url_max_len):
-            if (len(url) > url_max_len):
+        if not validators.url(url) or len(url) > url_max_len:
+            if len(url) > url_max_len:
                 flash('URL превышает 255 символов', 'error')
             else:
                 flash('Некорректный URL', 'error')
             messages = get_flashed_messages(with_categories=True)
             return render_template('index.html', messages=messages), 422
-        if (not id):
+        if not id:
             cursor.execute(
                 "INSERT INTO urls (name, created_at) VALUES (%s, %s);",
                 (normalized_url, date.today()))
