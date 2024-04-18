@@ -16,7 +16,7 @@ from flask import (
     redirect,
     url_for
 )
-from bs4 import BeautifulSoup as bs
+from bs4 import BeautifulSoup
 
 
 load_dotenv()
@@ -115,13 +115,13 @@ def check_page(id):
         try:
             r = requests.get(url)
             r.raise_for_status()
-            html = bs(r.text)
+            html = BeautifulSoup(r.text, 'html.parser')
             cursor.execute(
                 """INSERT INTO url_checks
                 (url_id, status_code, h1, title, description, created_at)
                 VALUES (%s, %s, %s, %s, %s, %s);""",
-                (id, r.status_code, html.h1.string, html.title.string,
-                    html.find(attrs={"name": "description"})['content'],
+                (id, r.status_code, html.h1.string if html.h1 else None, html.title.string if html.title else None,
+                    html.find(attrs={"name": "description"})['content'] if html.find(attrs={"name": "description"}) else None,
                     date.today()))
             flash('Страница успешно проверена', 'success')
             return redirect(url_for('render_url_page', id=id))
