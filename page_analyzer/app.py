@@ -114,20 +114,20 @@ def check_page(id):
         url = cursor.fetchone()[0]
         try:
             r = requests.get(url)
-            if (not r.raise_for_status()):
-                html = bs(r.text)
-                cursor.execute(
-                    """INSERT INTO url_checks
-                    (url_id, status_code, h1, title, description, created_at)
-                    VALUES (%s, %s, %s, %s, %s, %s);""",
-                    (id, r.status_code, html.h1.string, html.title.string,
-                     html.find(attrs={"name": "description"})['content'],
-                     date.today()))
-                flash('Страница успешно проверена', 'success')
-                return redirect(url_for('render_url_page', id=id))
-            else:
-                flash('Произошла ошибка при проверке', 'danger')
-                return redirect(url_for('render_url_page', id=id))
+            r.raise_for_status()
+            html = bs(r.text)
+            cursor.execute(
+                """INSERT INTO url_checks
+                (url_id, status_code, h1, title, description, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s);""",
+                (id, r.status_code, html.h1.string, html.title.string,
+                    html.find(attrs={"name": "description"})['content'],
+                    date.today()))
+            flash('Страница успешно проверена', 'success')
+            return redirect(url_for('render_url_page', id=id))
+        except requests.exceptions.HTTPError:
+            flash('Произошла ошибка при проверке', 'danger')
+            return redirect(url_for('render_url_page', id=id))
         except Exception:
             flash('Произошла ошибка при проверке', 'danger')
             return redirect(url_for('render_url_page', id=id))
