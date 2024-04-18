@@ -34,7 +34,6 @@ def normalize_data(item):
     return list(map(lambda val: (val if val else ''), item))
 
 
-
 @app.get('/urls')
 def render_add_page():
     conn = psycopg2.connect(DATABASE_URL)
