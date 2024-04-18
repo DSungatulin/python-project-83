@@ -115,24 +115,19 @@ def check_page(id):
         try:
             r = requests.get(url)
             if (not r.raise_for_status()):
-                html = bs(r.content, 'html.parser')
-                description = html.find(attrs={"name": "description"})
-                description_content = description['content'] if description else None
-
+                html = bs(r.text)
                 cursor.execute(
                     """INSERT INTO url_checks
                     (url_id, status_code, h1, title, description, created_at)
                     VALUES (%s, %s, %s, %s, %s, %s);""",
                     (id, r.status_code, html.h1.string, html.title.string,
-                    description_content, date.today()))
+                     html.find(attrs={"name": "description"})['content'],
+                     date.today()))
                 flash('Страница успешно проверена', 'success')
                 return redirect(url_for('render_url_page', id=id))
             else:
                 flash('Произошла ошибка при проверке', 'danger')
                 return redirect(url_for('render_url_page', id=id))
-        except requests.exceptions.RequestException:
-            flash('Произошла ошибка при проверке', 'danger')
-            return redirect(url_for('render_url_page', id=id))
-        except psycopg2.Error:
+        except Exception:
             flash('Произошла ошибка при проверке', 'danger')
             return redirect(url_for('render_url_page', id=id))
