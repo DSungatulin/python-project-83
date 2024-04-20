@@ -42,7 +42,7 @@ def retrieve_page():
 def retrieve_id():
     conn = connect_db()
     with conn.cursor() as cursor:
-        cursor.execute('SELECT id FROM urls WHERE name=%s', (normalise_url[1],))
+        cursor.execute('SELECT id FROM urls WHERE name=%s', (normalise_url()[1],))
         id = cursor.fetchone()
         return cursor, id
 
@@ -50,7 +50,7 @@ def retrieve_id():
 def check_db_data():
     cursor, id = retrieve_id()
     conn = connect_db()
-    url = normalise_url[1]
+    url = normalise_url()[1]
 
     cursor.execute(
         "INSERT INTO urls (name, created_at) VALUES (%s, %s);",
