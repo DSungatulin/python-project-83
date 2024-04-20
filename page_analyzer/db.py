@@ -1,14 +1,25 @@
 from dotenv import load_dotenv
 from datetime import date
+from urllib.parse import urlparse
+from flask import request
 
 
 import psycopg2
 import os
-import app
+
+
+
+load_dotenv()
+
+
+def normalise_url():
+    url = request.form.get('url', '')
+    parsed_url = urlparse(url)
+    normalized_url = f"{parsed_url.scheme}://{parsed_url.hostname}"
+    return url, normalized_url
 
 
 def connect_db():
-    load_dotenv()
     DATABASE_URL = os.getenv('DATABASE_URL')
     conn = psycopg2.connect(DATABASE_URL)
     return conn
@@ -32,7 +43,7 @@ def retrieve_page():
 def retrieve_id():
     conn = connect_db()
     with conn.cursor() as cursor:
-        cursor.execute('SELECT id FROM urls WHERE name=%s', (app.normalise_url[1],))
+        cursor.execute('SELECT id FROM urls WHERE name=%s', (normalise_url[1],))
         id = cursor.fetchone()
         return cursor, id
 
@@ -40,7 +51,7 @@ def retrieve_id():
 def check_db_data():
     cursor, id = retrieve_id()
     conn = connect_db()
-    url = app.normalise_url[1]
+    url = normalise_url[1]
 
     cursor.execute(
         "INSERT INTO urls (name, created_at) VALUES (%s, %s);",
