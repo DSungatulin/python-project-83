@@ -72,6 +72,7 @@ def render_url_page(id):
                     created_at FROM url_checks WHERE url_id=%s
                     ORDER BY id DESC""", (id,))
         checks = cursor.fetchall()
+        normalized_checks = normalize_data(checks)
         messages = get_flashed_messages(with_categories=True)
         return render_template(
             'url.html',
@@ -79,7 +80,7 @@ def render_url_page(id):
             url=url,
             id=id,
             date=date,
-            checks=checks
+            checks=normalized_checks
         )
 
 
