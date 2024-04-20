@@ -5,12 +5,10 @@ import page_analyzer.db as db
 
 
 from dotenv import load_dotenv
-from urllib.parse import urlparse
 from datetime import date
 from flask import (
     Flask,
     render_template,
-    request,
     flash,
     get_flashed_messages,
     redirect,
@@ -41,16 +39,9 @@ def render_add_page():
     return render_template('urls.html', urls=normalized_urls)
 
 
-def normalise_url():
-    url = request.form.get('url', '')
-    parsed_url = urlparse(url)
-    normalized_url = f"{parsed_url.scheme}://{parsed_url.hostname}"
-    return url, normalized_url
-
-
 @app.post('/urls')
 def add_page():
-    url = normalise_url[0]
+    url = db.normalise_url[0]
     url_max_len = 255
     id = db.retrieve_id()[1]
 
