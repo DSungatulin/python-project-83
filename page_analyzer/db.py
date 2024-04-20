@@ -44,20 +44,21 @@ def retrieve_id():
     with conn.cursor() as cursor:
         cursor.execute('SELECT id FROM urls WHERE name=%s', (normalise_url()[1],))
         id = cursor.fetchone()
-        return cursor, id
+        return id
 
 
 def check_db_data():
-    cursor, id = retrieve_id()
     conn = connect_db()
-    url = normalise_url()[1]
+    with conn.cursor() as cursor:
+        id = retrieve_id()
+        url = normalise_url()[1]
 
-    cursor.execute(
-        "INSERT INTO urls (name, created_at) VALUES (%s, %s);",
-        (url, date.today())
-    )
-    cursor.execute('SELECT id FROM urls WHERE name=%s', (url,))
+        cursor.execute(
+            "INSERT INTO urls (name, created_at) VALUES (%s, %s);",
+            (url, date.today())
+        )
+        cursor.execute('SELECT id FROM urls WHERE name=%s', (url,))
 
-    id = cursor.fetchone()[0]
-    conn.commit()
+        id = cursor.fetchone()[0]
+        conn.commit()
     return id
