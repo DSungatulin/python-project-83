@@ -28,7 +28,7 @@ def index_page():
 
 
 def normalize_data(item):
-    return list(map(lambda val: (val if val else ''), item))
+    return [val for val in (val if val else '' for val in item) if val != '']
 
 
 @app.get('/urls')
@@ -72,7 +72,6 @@ def render_url_page(id):
                     created_at FROM url_checks WHERE url_id=%s
                     ORDER BY id DESC""", (id,))
         checks = cursor.fetchall()
-        normalized_checks = list(map(normalize_data, checks))
         messages = get_flashed_messages(with_categories=True)
         return render_template(
             'url.html',
@@ -80,7 +79,7 @@ def render_url_page(id):
             url=url,
             id=id,
             date=date,
-            checks=normalized_checks
+            checks=checks
         )
 
 
