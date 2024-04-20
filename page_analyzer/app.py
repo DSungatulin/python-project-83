@@ -1,7 +1,7 @@
 import os
-import psycopg2
 import validators
 import requests
+import page_analyzer.db as db
 
 
 from dotenv import load_dotenv
@@ -20,7 +20,6 @@ from bs4 import BeautifulSoup
 
 
 load_dotenv()
-DATABASE_URL = os.getenv('DATABASE_URL')
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
@@ -36,56 +35,43 @@ def normalize_data(item):
 
 @app.get('/urls')
 def render_add_page():
-    conn = psycopg2.connect(DATABASE_URL)
-    with conn.cursor() as cursor:
-        query = """
-            SELECT urls.id, urls.name, MAX(url_checks.created_at), MAX(status_code)
-            FROM urls
-            LEFT JOIN url_checks ON urls.id = url_checks.url_id
-            GROUP BY urls.id
-            ORDER BY urls.id DESC
-        """
-        cursor.execute(query)
-        urls = cursor.fetchall()
-        normalized_urls = [normalize_data(url) for url in urls]
+    urls = db.retrieve_page
+    non_empty_urls = [url for url in urls if url[1]]
+    normalized_urls = [normalize_data(url) for url in non_empty_urls]
     return render_template('urls.html', urls=normalized_urls)
+
+
+def normalise_url():
+    url = request.form.get('url', '')
+    parsed_url = urlparse(url)
+    normalized_url = f"{parsed_url.scheme}://{parsed_url.hostname}"
+    return url, normalized_url
 
 
 @app.post('/urls')
 def add_page():
-    url = request.form.get('url', '')
+    url = normalise_url[0]
     url_max_len = 255
-    parsed_url = urlparse(url)
-    normalized_url = f"{parsed_url.scheme}://{parsed_url.hostname}"
-    conn = psycopg2.connect(DATABASE_URL)
-    with conn.cursor() as cursor:
-        cursor.execute('SELECT id FROM urls WHERE name=%s', (normalized_url,))
-        id = cursor.fetchone()
-        if not validators.url(url) or len(url) > url_max_len:
-            if len(url) > url_max_len:
-                flash('URL превышает 255 символов', 'error')
-            else:
-                flash('Некорректный URL', 'error')
-            messages = get_flashed_messages(with_categories=True)
-            return render_template('index.html', messages=messages), 422
-        if not id:
-            cursor.execute(
-                "INSERT INTO urls (name, created_at) VALUES (%s, %s);",
-                (normalized_url, date.today()))
-            cursor.execute('SELECT id FROM urls WHERE name=%s',
-                           (normalized_url,))
-            id = cursor.fetchone()[0]
-            conn.commit()
-            flash('Страница успешно добавлена', 'success')
-            return redirect(url_for('render_url_page', id=id))
+    id = db.retrieve_id()[1]
+    if not validators.url(url) or len(url) > url_max_len:
+        if len(url) > url_max_len:
+            flash('URL превышает 255 символов', 'error')
         else:
-            flash('Страница уже существует', 'info')
-            return redirect(url_for('render_url_page', id=id[0]))
+            flash('Некорректный URL', 'error')
+        messages = get_flashed_messages(with_categories=True)
+        return render_template('index.html', messages=messages), 422
+    if not id:
+        id = db.check_db_data()
+        flash('Страница успешно добавлена', 'success')
+        return redirect(url_for('render_url_page', id=id))
+    else:
+        flash('Страница уже существует', 'info')
+        return redirect(url_for('render_url_page', id=id[0]))
 
 
 @app.route('/urls/<int:id>')
 def render_url_page(id):
-    conn = psycopg2.connect(DATABASE_URL)
+    conn = db.connect_db()
     with conn.cursor() as cursor:
         cursor.execute('SELECT name, created_at FROM urls WHERE id=%s', (id,))
         url, date = cursor.fetchone()
@@ -107,7 +93,7 @@ def render_url_page(id):
 
 @app.post('/urls/<int:id>/checks')
 def check_page(id):
-    conn = psycopg2.connect(DATABASE_URL)
+    conn = db.connect_db()
     conn.autocommit = True
     with conn.cursor() as cursor:
         cursor.execute('SELECT name FROM urls WHERE id=%s', (id,))
@@ -120,9 +106,14 @@ def check_page(id):
                 """INSERT INTO url_checks
                 (url_id, status_code, h1, title, description, created_at)
                 VALUES (%s, %s, %s, %s, %s, %s);""",
-                (id, r.status_code, html.h1.string if html.h1 else None, html.title.string if html.title else None,
-                    html.find(attrs={"name": "description"})['content'] if html.find(attrs={"name": "description"}) else None,
-                    date.today()))
+                (id,
+                 r.status_code,
+                 html.h1.string if html.h1 else None,
+                 html.title.string if html.title else None,
+                 html.find(attrs={"name": "description"})['content'] if html.find(attrs={"name": "description"}) else None,
+                 date.today()
+                 )
+            )
             flash('Страница успешно проверена', 'success')
             return redirect(url_for('render_url_page', id=id))
         except requests.exceptions.HTTPError:
