@@ -35,7 +35,7 @@ def normalize_data(item):
 
 @app.get('/urls')
 def render_add_page():
-    urls = db.retrieve_page
+    urls = db.retrieve_page()
     non_empty_urls = [url for url in urls if url[1]]
     normalized_urls = [normalize_data(url) for url in non_empty_urls]
     return render_template('urls.html', urls=normalized_urls)
@@ -53,13 +53,16 @@ def add_page():
     url = normalise_url[0]
     url_max_len = 255
     id = db.retrieve_id()[1]
+    
     if not validators.url(url) or len(url) > url_max_len:
         if len(url) > url_max_len:
             flash('URL превышает 255 символов', 'error')
         else:
             flash('Некорректный URL', 'error')
+            
         messages = get_flashed_messages(with_categories=True)
         return render_template('index.html', messages=messages), 422
+    
     if not id:
         id = db.check_db_data()
         flash('Страница успешно добавлена', 'success')
