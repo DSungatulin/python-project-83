@@ -41,7 +41,7 @@ def render_add_page():
 
 @app.post('/urls')
 def add_page():
-    url = db.normalise_url[0]
+    url = db.normalise_url()[0]
     url_max_len = 255
     id = db.retrieve_id()[1]
 
