@@ -28,6 +28,7 @@ def retrieve_page():
         urls = cursor.fetchall()
         return urls
 
+
 def retrieve_id():
     conn = connect_db()
     with conn.cursor() as cursor:
@@ -35,17 +36,18 @@ def retrieve_id():
         id = cursor.fetchone()
         return cursor, id
 
+
 def check_db_data():
     cursor, id = retrieve_id()
     conn = connect_db()
     url = app.normalise_url[1]
-    
+
     cursor.execute(
         "INSERT INTO urls (name, created_at) VALUES (%s, %s);",
         (url, date.today())
     )
     cursor.execute('SELECT id FROM urls WHERE name=%s', (url,))
-    
+
     id = cursor.fetchone()[0]
     conn.commit()
     return id
