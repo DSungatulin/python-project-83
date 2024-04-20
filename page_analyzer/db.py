@@ -6,16 +6,7 @@ from flask import request
 
 import psycopg2
 import os
-
-
-load_dotenv()
-
-
-def normalise_url():
-    url = request.form.get('url', '')
-    parsed_url = urlparse(url)
-    normalized_url = f"{parsed_url.scheme}://{parsed_url.hostname}"
-    return url, normalized_url
+import app
 
 
 def connect_db():
