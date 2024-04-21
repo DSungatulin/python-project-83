@@ -28,15 +28,14 @@ def index_page():
 
 
 def normalize_data(item):
-    return list(filter(None, map(lambda val: (val if val else ''), item)))
+    return [val for val in (val if val else '' for val in item) if val != '']
 
 
 
 @app.get('/urls')
 def render_add_page():
     urls = db.retrieve_page()
-    non_empty_urls = [url for url in urls if url[1]]
-    normalized_urls = [normalize_data(url) for url in non_empty_urls]
+    normalized_urls = [normalize_data(urls)]
     return render_template('urls.html', urls=normalized_urls)
 
 
