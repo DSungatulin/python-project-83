@@ -28,7 +28,8 @@ def index_page():
 
 
 def normalize_data(item):
-    return [val for val in (val if val else '' for val in item) if val != '']
+    return list(filter(None, map(lambda val: (val if val else ''), item)))
+
 
 
 @app.get('/urls')
