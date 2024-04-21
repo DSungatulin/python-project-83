@@ -35,7 +35,7 @@ def normalize_data(item):
 @app.get('/urls')
 def render_add_page():
     urls = db.retrieve_page()
-    normalized_urls = [normalize_data(urls)]
+    normalized_urls = normalize_data(urls)
     return render_template('urls.html', urls=normalized_urls)
 
 
