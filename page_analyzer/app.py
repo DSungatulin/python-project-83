@@ -31,7 +31,6 @@ def normalize_data(item):
     return [val for val in (val if val else '' for val in item) if val != '']
 
 
-
 @app.get('/urls')
 def render_add_page():
     urls = db.retrieve_page()
