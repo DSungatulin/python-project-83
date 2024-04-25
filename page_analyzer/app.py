@@ -1,11 +1,13 @@
 import os
-import validators
 import requests
+import validators
 import page_analyzer.db as db
+import page_analyzer.normalization as norm
 
 
-from dotenv import load_dotenv
 from datetime import date
+from bs4 import BeautifulSoup
+from dotenv import load_dotenv
 from flask import (
     Flask,
     render_template,
@@ -14,7 +16,10 @@ from flask import (
     redirect,
     url_for
 )
-from bs4 import BeautifulSoup
+
+
+
+conn = db.conn
 
 
 load_dotenv()
@@ -27,20 +32,16 @@ def index_page():
     return render_template('index.html')
 
 
-def normalize_data(item):
-    return [val for val in (val if val else '' for val in item) if val != '']
-
-
 @app.get('/urls')
 def render_add_page():
     urls = db.retrieve_page()
-    normalized_urls = normalize_data(urls)
+    normalized_urls = norm.normalize_data(urls)
     return render_template('urls.html', urls=normalized_urls)
 
 
 @app.post('/urls')
 def add_page():
-    url = db.normalise_url()[0]
+    url = norm.normalise_url()[0]
     url_max_len = 255
     id = db.retrieve_id()
 
@@ -64,53 +65,41 @@ def add_page():
 @app.route('/urls/<int:id>')
 def render_url_page(id):
     conn = db.connect_db()
-    with conn.cursor() as cursor:
-        cursor.execute('SELECT name, created_at FROM urls WHERE id=%s', (id,))
-        url, date = cursor.fetchone()
-        cursor.execute("""SELECT id, status_code, h1, title, description,
-                    created_at FROM url_checks WHERE url_id=%s
-                    ORDER BY id DESC""", (id,))
-        checks = cursor.fetchall()
-        normalized_checks = normalize_data(checks)
-        messages = get_flashed_messages(with_categories=True)
-        return render_template(
-            'url.html',
-            messages=messages,
-            url=url,
-            id=id,
-            date=date,
-            checks=normalized_checks
-        )
-
+    url, date, normalized_checks = db.get_url_details(conn, id)
+    messages = get_flashed_messages(with_categories=True)
+    return render_template(
+        'url.html',
+        messages=messages,
+        url=url,
+        id=id,
+        date=date,
+        checks=normalized_checks
+    )
 
 @app.post('/urls/<int:id>/checks')
 def check_page(id):
     conn = db.connect_db()
     conn.autocommit = True
-    with conn.cursor() as cursor:
-        cursor.execute('SELECT name FROM urls WHERE id=%s', (id,))
-        url = cursor.fetchone()[0]
+    url = db.get_url_by_id(conn, id)
+    if url:
         try:
             r = requests.get(url)
             r.raise_for_status()
             html = BeautifulSoup(r.text, 'html.parser')
-            cursor.execute(
-                """INSERT INTO url_checks
-                (url_id, status_code, h1, title, description, created_at)
-                VALUES (%s, %s, %s, %s, %s, %s);""",
-                (id,
-                 r.status_code,
-                 html.h1.string if html.h1 else None,
-                 html.title.string if html.title else None,
-                 html.find(attrs={"name": "description"})['content'] if html.find(attrs={"name": "description"}) else None,
-                 date.today()
-                 )
+            db.insert_url_check(
+                conn,
+                id,
+                r.status_code,
+                html.h1.string if html.h1 else None,
+                html.title.string if html.title else None,
+                html.find(attrs={"name": "description"})['content'] if html.find(attrs={"name": "description"}) else None,
+                date.today()
             )
             flash('Страница успешно проверена', 'success')
-            return redirect(url_for('render_url_page', id=id))
         except requests.exceptions.HTTPError:
             flash('Произошла ошибка при проверке', 'danger')
-            return redirect(url_for('render_url_page', id=id))
         except Exception:
             flash('Произошла ошибка при проверке', 'danger')
-            return redirect(url_for('render_url_page', id=id))
+    else:
+        flash('URL not found', 'danger')
+    return redirect(url_for('render_url_page', id=id))
