@@ -77,6 +77,7 @@ def get_url_by_id(conn, id):
         url = cursor.fetchone()
         return url[0] if url else None
 
+
 def insert_url_check(conn, id, status_code, h1, title, description, created_at):
     with conn.cursor() as cursor:
         cursor.execute(

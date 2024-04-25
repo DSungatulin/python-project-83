@@ -18,7 +18,6 @@ from flask import (
 )
 
 
-
 conn = db.conn
 
 
@@ -75,6 +74,7 @@ def render_url_page(id):
         date=date,
         checks=normalized_checks
     )
+
 
 @app.post('/urls/<int:id>/checks')
 def check_page(id):
