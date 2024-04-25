@@ -2,7 +2,7 @@ from urllib.parse import urlparse
 from flask import request
 
 
-def normalise_url():
+def normalize_url():
     url = request.form.get('url', '')
     parsed_url = urlparse(url)
     normalized_url = f"{parsed_url.scheme}://{parsed_url.hostname}"

@@ -1,10 +1,10 @@
 from dotenv import load_dotenv
 from datetime import date
+from page_analyzer.normalization import normalize_url
 
 
 import psycopg2
 import os
-import page_analyzer.normalization as norm
 
 
 load_dotenv()
@@ -16,16 +16,13 @@ def connect_db():
     return conn
 
 
-conn = connect_db()
-
-
 def retrieve_page():
     conn = connect_db()
     with conn.cursor() as cursor:
         query = """
             SELECT urls.id, urls.name, MAX(url_checks.created_at), MAX(status_code)
             FROM urls
-            LEFT JOIN url_checks ON urls.id = url_checks.id
+            LEFT JOIN url_checks ON urls.id = url_checks.url_id
             GROUP BY urls.id
             ORDER BY urls.id DESC
         """
@@ -37,7 +34,7 @@ def retrieve_page():
 def retrieve_id():
     conn = connect_db()
     with conn.cursor() as cursor:
-        cursor.execute('SELECT id FROM urls WHERE name=%s', (norm.normalise_url()[1],))
+        cursor.execute('SELECT id FROM urls WHERE name=%s', (normalize_url()[1],))
         id = cursor.fetchone()
         return id
 
@@ -45,8 +42,8 @@ def retrieve_id():
 def check_db_data():
     conn = connect_db()
     with conn.cursor() as cursor:
-        id = retrieve_id(conn)
-        url = norm.normalise_url()[1]
+        id = retrieve_id()
+        url = normalize_url()[1]
 
         cursor.execute(
             "INSERT INTO urls (name, created_at) VALUES (%s, %s);",
@@ -58,32 +55,36 @@ def check_db_data():
         conn.commit()
     return id
 
-
-def get_url_details(conn, id):
+def get_url_details(id):
+    conn = connect_db()
     with conn.cursor() as cursor:
         cursor.execute('SELECT name, created_at FROM urls WHERE id=%s', (id,))
-        url, date = cursor.fetchone()
-        cursor.execute("""SELECT id, status_code, h1, title, description,
-                          created_at FROM url_checks WHERE id=%s
-                          ORDER BY id DESC""", (id,))
-        checks = cursor.fetchall()
-    normalized_checks = norm.normalize_data(checks)
-    return url, date, normalized_checks
+        return cursor.fetchone()
 
+def get_url_checks(id):
+    conn = connect_db()
+    with conn.cursor() as cursor:
+        cursor.execute("""SELECT id, status_code, h1, title, description, created_at
+                       FROM url_checks
+                       WHERE url_id=%s
+                       ORDER BY id DESC""",
+                       (id,))
+        return cursor.fetchall()
 
-def get_url_by_id(conn, id):
+def get_url_by_id(id):
+    conn = connect_db()
     with conn.cursor() as cursor:
         cursor.execute('SELECT name FROM urls WHERE id=%s', (id,))
-        url = cursor.fetchone()
-        return url[0] if url else None
+        return cursor.fetchone()[0]
 
-
-def insert_url_check(conn, id, status_code, h1, title, description, created_at):
+def insert_url_check(id, status_code, h1, title, description):
+    conn = connect_db()
+    conn.autocommit = True
     with conn.cursor() as cursor:
         cursor.execute(
             """INSERT INTO url_checks
             (url_id, status_code, h1, title, description, created_at)
             VALUES (%s, %s, %s, %s, %s, %s);""",
-            (id, status_code, h1, title, description, created_at)
+            (id, status_code, h1, title, description, date.today())
         )
-        conn.commit()
+    conn.commit()
