@@ -24,7 +24,7 @@ def retrieve_page():
         query = """
             SELECT urls.id, urls.name, MAX(url_checks.created_at), MAX(status_code)
             FROM urls
-            LEFT JOIN url_checks ON urls.id = url_checks.id
+            LEFT JOIN url_checks ON urls.id = url_checks.url_id
             GROUP BY urls.id
             ORDER BY urls.id DESC
         """
@@ -68,6 +68,6 @@ def get_url_checks(id):
     conn = connect_db()
     with conn.cursor() as cursor:
         cursor.execute("""SELECT id, status_code, h1, title, description, created_at
-                          FROM url_checks WHERE id=%s ORDER BY id DESC""", (id,))
+                          FROM url_checks WHERE url_id=%s ORDER BY id DESC""", (id,))
         checks = cursor.fetchall()
     return checks

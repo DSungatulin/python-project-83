@@ -88,7 +88,7 @@ def check_page(id):
             html = BeautifulSoup(r.text, 'html.parser')
             cursor.execute(
                 """INSERT INTO url_checks
-                (id, status_code, h1, title, description, created_at)
+                (url_id, status_code, h1, title, description, created_at)
                 VALUES (%s, %s, %s, %s, %s, %s);""",
                 (id,
                  r.status_code,
