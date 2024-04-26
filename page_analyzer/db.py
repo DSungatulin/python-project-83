@@ -24,7 +24,7 @@ def retrieve_page():
         query = """
             SELECT urls.id, urls.name, MAX(url_checks.created_at), MAX(status_code)
             FROM urls
-            LEFT JOIN url_checks ON urls.id = url_checks.url_id
+            LEFT JOIN url_checks ON urls.id = url_checks.id
             GROUP BY urls.id
             ORDER BY urls.id DESC
         """
@@ -46,13 +46,11 @@ def check_db_data():
     with conn.cursor() as cursor:
         id = retrieve_id()
         url = normalize_url()[1]
-
         cursor.execute(
             "INSERT INTO urls (name, created_at) VALUES (%s, %s);",
             (url, date.today())
         )
         cursor.execute('SELECT id FROM urls WHERE name=%s', (url,))
-
         id = cursor.fetchone()[0]
         conn.commit()
     return id
@@ -70,6 +68,6 @@ def get_url_checks(id):
     conn = connect_db()
     with conn.cursor() as cursor:
         cursor.execute("""SELECT id, status_code, h1, title, description, created_at
-                          FROM url_checks WHERE url_id=%s ORDER BY id DESC""", (id,))
+                          FROM url_checks WHERE id=%s ORDER BY id DESC""", (id,))
         checks = cursor.fetchall()
     return checks
