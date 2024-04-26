@@ -60,9 +60,9 @@ def add_page():
 
 @app.route('/urls/<int:id>')
 def render_url_page(id):
-    url_details = db.get_url_details(id)
+    url_details = db.get_url_details(id)[0]
     url, date = url_details
-    checks = db.get_url_checks(id)
+    checks = db.get_url_details(id)[1]
     normalized_checks = normalize_data(checks)
     messages = get_flashed_messages(with_categories=True)
     return render_template(
