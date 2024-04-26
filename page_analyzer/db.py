@@ -71,3 +71,20 @@ def get_url_checks(id):
                           FROM url_checks WHERE url_id=%s ORDER BY id DESC""", (id,))
         checks = cursor.fetchall()
     return checks
+
+def get_url_by_id(id):
+    conn = connect_db()
+    with conn.cursor() as cursor:
+        cursor.execute('SELECT name FROM urls WHERE id=%s', (id,))
+        return cursor.fetchone()[0]
+
+def insert_url_check(id, status_code, h1, title, description):
+    conn = connect_db()
+    conn.autocommit = True
+    with conn.cursor() as cursor:
+        cursor.execute(
+            """INSERT INTO url_checks
+            (url_id, status_code, h1, title, description, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s);""",
+            (id, status_code, h1, title, description, date.today())
+        )

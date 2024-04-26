@@ -5,7 +5,6 @@ import page_analyzer.db as db
 
 
 from dotenv import load_dotenv
-from datetime import date
 from flask import (
     Flask,
     render_template,
@@ -77,32 +76,23 @@ def render_url_page(id):
 
 @app.post('/urls/<int:id>/checks')
 def check_page(id):
-    conn = db.connect_db()
-    conn.autocommit = True
-    with conn.cursor() as cursor:
-        cursor.execute('SELECT name FROM urls WHERE id=%s', (id,))
-        url = cursor.fetchone()[0]
-        try:
-            r = requests.get(url)
-            r.raise_for_status()
-            html = BeautifulSoup(r.text, 'html.parser')
-            cursor.execute(
-                """INSERT INTO url_checks
-                (url_id, status_code, h1, title, description, created_at)
-                VALUES (%s, %s, %s, %s, %s, %s);""",
-                (id,
-                 r.status_code,
-                 html.h1.string if html.h1 else None,
-                 html.title.string if html.title else None,
-                 html.find(attrs={"name": "description"})['content'] if html.find(attrs={"name": "description"}) else None,
-                 date.today()
-                 )
-            )
-            flash('Страница успешно проверена', 'success')
-            return redirect(url_for('render_url_page', id=id))
-        except requests.exceptions.HTTPError:
-            flash('Произошла ошибка при проверке', 'danger')
-            return redirect(url_for('render_url_page', id=id))
-        except Exception:
-            flash('Произошла ошибка при проверке', 'danger')
-            return redirect(url_for('render_url_page', id=id))
+    url = db.get_url_by_id(id)
+    try:
+        r = requests.get(url)
+        r.raise_for_status()
+        html = BeautifulSoup(r.text, 'html.parser')
+        db.insert_url_check(
+            id,
+            r.status_code,
+            html.h1.string if html.h1 else None,
+            html.title.string if html.title else None,
+            html.find(attrs={"name": "description"})['content'] if html.find(attrs={"name": "description"}) else None
+        )
+        flash('Страница успешно проверена', 'success')
+        return redirect(url_for('render_url_page', id=id))
+    except requests.exceptions.HTTPError:
+        flash('Произошла ошибка при проверке', 'danger')
+        return redirect(url_for('render_url_page', id=id))
+    except Exception:
+        flash('Произошла ошибка при проверке', 'danger')
+        return redirect(url_for('render_url_page', id=id))
