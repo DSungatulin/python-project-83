@@ -60,24 +60,19 @@ def add_page():
 
 @app.route('/urls/<int:id>')
 def render_url_page(id):
-    conn = db.connect_db()
-    with conn.cursor() as cursor:
-        cursor.execute('SELECT name, created_at FROM urls WHERE id=%s', (id,))
-        url, date = cursor.fetchone()
-        cursor.execute("""SELECT id, status_code, h1, title, description,
-                    created_at FROM url_checks WHERE url_id=%s
-                    ORDER BY id DESC""", (id,))
-        checks = cursor.fetchall()
-        normalized_checks = normalize_data(checks)
-        messages = get_flashed_messages(with_categories=True)
-        return render_template(
-            'url.html',
-            messages=messages,
-            url=url,
-            id=id,
-            date=date,
-            checks=normalized_checks
-        )
+    url_details = db.get_url_details(id)
+    url, date = url_details
+    checks = db.get_url_checks(id)
+    normalized_checks = normalize_data(checks)
+    messages = get_flashed_messages(with_categories=True)
+    return render_template(
+        'url.html',
+        messages=messages,
+        url=url,
+        id=id,
+        date=date,
+        checks=normalized_checks
+    )
 
 
 @app.post('/urls/<int:id>/checks')
