@@ -77,6 +77,7 @@ def get_url_by_id(id):
 
 
 def insert_url_check(conn, id, status_code, h1, title, description):
+    conn.autocommit = True
     with conn.cursor() as cursor:
         cursor.execute(
             """INSERT INTO url_checks
