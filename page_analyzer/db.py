@@ -30,15 +30,15 @@ def retrieve_page(conn):
         return urls
 
 
-def retrieve_id(conn):
+def retrieve_id():
+    conn = connect_db()
     with conn.cursor() as cursor:
         cursor.execute('SELECT id FROM urls WHERE name=%s', (normalize_url()[1],))
         id = cursor.fetchone()
         return id
 
 
-def check_db_data():
-    conn = connect_db()
+def check_db_data(conn):
     with conn.cursor() as cursor:
         id = retrieve_id()
         url = normalize_url()[1]
