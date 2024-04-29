@@ -69,15 +69,14 @@ def get_url_checks(id):
     return checks
 
 
-def get_url_by_id(conn, id):
+def get_url_by_id(id):
+    conn = connect_db()
     with conn.cursor() as cursor:
         cursor.execute('SELECT name FROM urls WHERE id=%s', (id,))
         return cursor.fetchone()[0]
 
 
-def insert_url_check(id, status_code, h1, title, description):
-    conn = connect_db()
-    conn.autocommit = True
+def insert_url_check(conn, id, status_code, h1, title, description):
     with conn.cursor() as cursor:
         cursor.execute(
             """INSERT INTO url_checks
