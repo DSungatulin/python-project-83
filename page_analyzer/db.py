@@ -52,8 +52,7 @@ def check_db_data(conn):
     return id
 
 
-def get_url_details(id):
-    conn = connect_db()
+def get_url_details(conn, id):
     with conn.cursor() as cursor:
         cursor.execute('SELECT name, created_at FROM urls WHERE id=%s', (id,))
         url_details = cursor.fetchone()
