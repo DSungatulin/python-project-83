@@ -60,7 +60,8 @@ def get_url_details(id):
     return url_details
 
 
-def get_url_checks(conn, id):
+def get_url_checks(id):
+    conn = connect_db()
     with conn.cursor() as cursor:
         cursor.execute("""SELECT id, status_code, h1, title, description, created_at
                           FROM url_checks WHERE url_id=%s ORDER BY id DESC""", (id,))
@@ -68,8 +69,7 @@ def get_url_checks(conn, id):
     return checks
 
 
-def get_url_by_id(id):
-    conn = connect_db()
+def get_url_by_id(conn, id):
     with conn.cursor() as cursor:
         cursor.execute('SELECT name FROM urls WHERE id=%s', (id,))
         return cursor.fetchone()[0]
