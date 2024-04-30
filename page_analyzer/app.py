@@ -20,6 +20,7 @@ from page_analyzer.normalization import normalize_url, normalize_data
 load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+conn = db.connect_db()
 
 
 @app.route("/")
@@ -29,7 +30,7 @@ def index_page():
 
 @app.get('/urls')
 def render_add_page():
-    urls = db.retrieve_page()
+    urls = db.retrieve_page(conn)
     normalized_urls = normalize_data(urls)
     return render_template('urls.html', urls=normalized_urls)
 

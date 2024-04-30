@@ -16,7 +16,7 @@ def connect_db():
     return conn
 
 
-def retrieve_page():
+def retrieve_page(conn):
     conn = connect_db
     with conn.cursor() as cursor:
         query = """
