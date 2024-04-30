@@ -20,7 +20,6 @@ from page_analyzer.normalization import normalize_url, normalize_data
 load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-conn = db.connect_db()
 
 
 @app.route("/")

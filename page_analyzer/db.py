@@ -16,10 +16,8 @@ def connect_db():
     return conn
 
 
-conn = connect_db()
-
-
-def retrieve_page(conn):
+def retrieve_page():
+    conn = connect_db
     with conn.cursor() as cursor:
         query = """
             SELECT urls.id, urls.name, MAX(url_checks.created_at), MAX(status_code)
@@ -41,7 +39,8 @@ def retrieve_id():
         return id
 
 
-def check_db_data(conn):
+def check_db_data():
+    conn = connect_db()
     with conn.cursor() as cursor:
         id = retrieve_id()
         url = normalize_url()[1]
