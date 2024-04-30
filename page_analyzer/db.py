@@ -17,7 +17,6 @@ def connect_db():
 
 
 def retrieve_page(conn):
-    conn = connect_db
     with conn.cursor() as cursor:
         query = """
             SELECT urls.id, urls.name, MAX(url_checks.created_at), MAX(status_code)
