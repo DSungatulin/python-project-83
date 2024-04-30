@@ -50,7 +50,7 @@ def add_page():
         return render_template('index.html', messages=messages), 422
 
     if not id:
-        id = db.check_db_data()
+        id = db.check_db_data(conn)
         flash('Страница успешно добавлена', 'success')
         return redirect(url_for('render_url_page', id=id))
     else:
