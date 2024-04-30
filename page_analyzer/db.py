@@ -30,8 +30,7 @@ def retrieve_page(conn):
         return urls
 
 
-def retrieve_id():
-    conn = connect_db()
+def retrieve_id(conn):
     with conn.cursor() as cursor:
         cursor.execute('SELECT id FROM urls WHERE name=%s', (normalize_url()[1],))
         id = cursor.fetchone()
@@ -76,7 +75,8 @@ def get_url_by_id(id):
         return cursor.fetchone()[0]
 
 
-def insert_url_check(conn, id, status_code, h1, title, description):
+def insert_url_check(id, status_code, h1, title, description):
+    conn = connect_db()
     conn.autocommit = True
     with conn.cursor() as cursor:
         cursor.execute(

@@ -20,6 +20,7 @@ from page_analyzer.normalization import normalize_url, normalize_data
 load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+conn = db.connect_db()
 
 
 @app.route("/")
@@ -38,7 +39,7 @@ def render_add_page():
 def add_page():
     url = normalize_url()[0]
     url_max_len = 255
-    id = db.retrieve_id()
+    id = db.retrieve_id(conn)
 
     if not validators.url(url) or len(url) > url_max_len:
         if len(url) > url_max_len:
