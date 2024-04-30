@@ -20,7 +20,7 @@ from page_analyzer.normalization import normalize_url, normalize_data
 load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-conn = db.connect_db()
+conn = db.conn
 
 
 @app.route("/")
@@ -39,7 +39,7 @@ def render_add_page():
 def add_page():
     url = normalize_url()[0]
     url_max_len = 255
-    id = db.retrieve_id(conn)
+    id = db.retrieve_id()
 
     if not validators.url(url) or len(url) > url_max_len:
         if len(url) > url_max_len:
@@ -50,7 +50,7 @@ def add_page():
         return render_template('index.html', messages=messages), 422
 
     if not id:
-        id = db.check_db_data(conn)
+        id = db.check_db_data()
         flash('Страница успешно добавлена', 'success')
         return redirect(url_for('render_url_page', id=id))
     else:
@@ -83,6 +83,7 @@ def check_page(id):
         r.raise_for_status()
         html = BeautifulSoup(r.text, 'html.parser')
         db.insert_url_check(
+            conn,
             id,
             r.status_code,
             html.h1.string if html.h1 else None,

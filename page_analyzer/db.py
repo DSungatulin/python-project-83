@@ -16,6 +16,9 @@ def connect_db():
     return conn
 
 
+conn = connect_db()
+
+
 def retrieve_page(conn):
     with conn.cursor() as cursor:
         query = """
@@ -75,8 +78,7 @@ def get_url_by_id(id):
         return cursor.fetchone()[0]
 
 
-def insert_url_check(id, status_code, h1, title, description):
-    conn = connect_db()
+def insert_url_check(conn, id, status_code, h1, title, description):
     conn.autocommit = True
     with conn.cursor() as cursor:
         cursor.execute(
