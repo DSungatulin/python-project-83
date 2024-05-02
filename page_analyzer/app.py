@@ -62,9 +62,9 @@ def add_page():
 @app.route('/urls/<int:id>')
 def render_url_page(id):
     conn = db.connect_db()
-    url_details = db.get_url_details(id, conn)
+    url_details = db.get_url_details(conn, id)
     url, date = url_details
-    checks = db.get_url_checks(id, conn)
+    checks = db.get_url_checks(conn, id)
     normalized_checks = normalize_data(checks)
     messages = get_flashed_messages(with_categories=True)
     return render_template(
@@ -80,7 +80,7 @@ def render_url_page(id):
 @app.post('/urls/<int:id>/checks')
 def check_page(id):
     conn = db.connect_db()
-    url = db.get_url_by_id(id, conn)
+    url = db.get_url_by_id(conn, id)
     try:
         r = requests.get(url)
         r.raise_for_status()

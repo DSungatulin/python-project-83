@@ -7,11 +7,13 @@ import psycopg2
 import os
 
 
+DATABASE_URL = os.getenv('DATABASE_URL')
+
+
 load_dotenv()
 
 
 def connect_db():
-    DATABASE_URL = os.getenv('DATABASE_URL')
     conn = psycopg2.connect(DATABASE_URL)
     return conn
 
@@ -51,14 +53,14 @@ def check_db_data(conn):
     return id
 
 
-def get_url_details(id, conn):
+def get_url_details(conn, id):
     with conn.cursor() as cursor:
         cursor.execute('SELECT name, created_at FROM urls WHERE id=%s', (id,))
         url_details = cursor.fetchone()
     return url_details
 
 
-def get_url_checks(id, conn):
+def get_url_checks(conn, id):
     with conn.cursor() as cursor:
         cursor.execute("""SELECT id, status_code, h1, title, description, created_at
                           FROM url_checks WHERE url_id=%s ORDER BY id DESC""", (id,))
@@ -66,7 +68,7 @@ def get_url_checks(id, conn):
     return checks
 
 
-def get_url_by_id(id, conn):
+def get_url_by_id(conn, id):
     with conn.cursor() as cursor:
         cursor.execute('SELECT name FROM urls WHERE id=%s', (id,))
         return cursor.fetchone()[0]
