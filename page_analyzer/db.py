@@ -37,8 +37,7 @@ def retrieve_id(conn):
         return id
 
 
-def check_db_data():
-    conn = connect_db()
+def check_db_data(conn):
     with conn.cursor() as cursor:
         id = retrieve_id()
         url = normalize_url()[1]
@@ -52,16 +51,14 @@ def check_db_data():
     return id
 
 
-def get_url_details(id):
-    conn = connect_db()
+def get_url_details(id, conn):
     with conn.cursor() as cursor:
         cursor.execute('SELECT name, created_at FROM urls WHERE id=%s', (id,))
         url_details = cursor.fetchone()
     return url_details
 
 
-def get_url_checks(id):
-    conn = connect_db()
+def get_url_checks(id, conn):
     with conn.cursor() as cursor:
         cursor.execute("""SELECT id, status_code, h1, title, description, created_at
                           FROM url_checks WHERE url_id=%s ORDER BY id DESC""", (id,))
@@ -69,15 +66,13 @@ def get_url_checks(id):
     return checks
 
 
-def get_url_by_id(id):
-    conn = connect_db()
+def get_url_by_id(id, conn):
     with conn.cursor() as cursor:
         cursor.execute('SELECT name FROM urls WHERE id=%s', (id,))
         return cursor.fetchone()[0]
 
 
-def insert_url_check(id, status_code, h1, title, description):
-    conn = connect_db()
+def insert_url_check(conn, id, status_code, h1, title, description):
     conn.autocommit = True
     with conn.cursor() as cursor:
         cursor.execute(

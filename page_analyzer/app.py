@@ -51,7 +51,7 @@ def add_page():
         return render_template('index.html', messages=messages), 422
 
     if not id:
-        id = db.check_db_data()
+        id = db.check_db_data(conn)
         flash('Страница успешно добавлена', 'success')
         return redirect(url_for('render_url_page', id=id))
     else:
@@ -61,9 +61,10 @@ def add_page():
 
 @app.route('/urls/<int:id>')
 def render_url_page(id):
-    url_details = db.get_url_details(id)
+    conn = db.connect_db()
+    url_details = db.get_url_details(id, conn)
     url, date = url_details
-    checks = db.get_url_checks(id)
+    checks = db.get_url_checks(id, conn)
     normalized_checks = normalize_data(checks)
     messages = get_flashed_messages(with_categories=True)
     return render_template(
@@ -78,12 +79,14 @@ def render_url_page(id):
 
 @app.post('/urls/<int:id>/checks')
 def check_page(id):
-    url = db.get_url_by_id(id)
+    conn = db.connect_db()
+    url = db.get_url_by_id(id, conn)
     try:
         r = requests.get(url)
         r.raise_for_status()
         html = BeautifulSoup(r.text, 'html.parser')
         db.insert_url_check(
+            conn,
             id,
             r.status_code,
             html.h1.string if html.h1 else None,
