@@ -96,7 +96,7 @@ def check_page(id):
         flash('Страница успешно проверена', 'success')
         return redirect(url_for('render_url_page', id=id))
     except requests.exceptions.HTTPError:
-        flash('Произошла ошибка при проверке', 'danger')
+        flash('Произошла ошибка при проверке!', 'danger')
         return redirect(url_for('render_url_page', id=id))
     except Exception:
         flash('Произошла ошибка при проверке', 'danger')
