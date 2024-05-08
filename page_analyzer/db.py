@@ -76,7 +76,9 @@ def get_url_by_id(id, conn):
     with conn.cursor() as cursor:
         query = 'SELECT name FROM urls WHERE id=%s'
         cursor.execute(query, (id,))
-        return cursor.fetchone()[0]
+        result = cursor.fetchone()[0]
+    conn.close()
+    return result
 
 
 def insert_url_check(conn, id, status_code, h1, title, description):
