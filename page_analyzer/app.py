@@ -80,7 +80,7 @@ def check_page(id):
     conn = db.connect_db()
     url = db.get_url_by_id(id, conn)
     try:
-        r = requests.get(url)
+        r = requests.get(url, timeout=5)
         r.raise_for_status()
         html = BeautifulSoup(r.text, 'html.parser')
         db.insert_url_check(
