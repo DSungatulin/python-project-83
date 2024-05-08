@@ -40,7 +40,7 @@ def add_page():
     conn = db.connect_db()
     url = normalize_url()[0]
     url_max_len = 255
-    id = db.retrieve_id(conn)
+    id = db.retrieve_id()
 
     if not validators.url(url) or len(url) > url_max_len:
         if len(url) > url_max_len:
@@ -81,23 +81,23 @@ def render_url_page(id):
 def check_page(id):
     conn = db.connect_db()
     url = db.get_url_by_id(conn, id)
-    # try:
-    r = requests.get(url)
-    r.raise_for_status()
-    html = BeautifulSoup(r.text, 'html.parser')
-    db.insert_url_check(
-        conn,
-        id,
-        r.status_code,
-        html.h1.string if html.h1 else None,
-        html.title.string if html.title else None,
-        html.find(attrs={"name": "description"})['content'] if html.find(attrs={"name": "description"}) else None
-    )
-    flash('Страница успешно проверена', 'success')
-    return redirect(url_for('render_url_page', id=id))
-    # except requests.exceptions.HTTPError:
-    #     flash('Произошла ошибка при проверке', 'danger')
-    #     return redirect(url_for('render_url_page', id=id))
-    # except Exception:
-    #     flash('Произошла ошибка при проверке', 'danger')
-    #     return redirect(url_for('render_url_page', id=id))
+    try:
+        r = requests.get(url)
+        r.raise_for_status()
+        html = BeautifulSoup(r.text, 'html.parser')
+        db.insert_url_check(
+            conn,
+            id,
+            r.status_code,
+            html.h1.string if html.h1 else None,
+            html.title.string if html.title else None,
+            html.find(attrs={"name": "description"})['content'] if html.find(attrs={"name": "description"}) else None
+        )
+        flash('Страница успешно проверена', 'success')
+        return redirect(url_for('render_url_page', id=id))
+    except requests.exceptions.HTTPError:
+        flash('Произошла ошибка при проверке', 'danger')
+        return redirect(url_for('render_url_page', id=id))
+    except Exception:
+        flash('Произошла ошибка при проверке', 'danger')
+        return redirect(url_for('render_url_page', id=id))

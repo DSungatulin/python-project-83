@@ -32,7 +32,8 @@ def retrieve_page(conn):
         return urls
 
 
-def retrieve_id(conn):
+def retrieve_id():
+    conn = connect_db()
     with conn.cursor() as cursor:
         cursor.execute('SELECT id FROM urls WHERE name=%s', (normalize_url()[1],))
         id = cursor.fetchone()
