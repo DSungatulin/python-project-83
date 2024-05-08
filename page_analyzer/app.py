@@ -82,7 +82,7 @@ def check_page(id):
     try:
         r = requests.get(url)
         r.raise_for_status()
-        html = BeautifulSoup(r.text)
+        html = BeautifulSoup(r.text, 'html.parser')
         db.insert_url_check(
             conn,
             id,
