@@ -78,8 +78,8 @@ def render_url_page(id):
 @app.post('/urls/<int:id>/checks')
 def check_page(id):
     conn = db.connect_db()
-    url = db.get_url_by_id(id, conn)
     try:
+        url = db.get_url_by_id(id, conn)
         r = requests.get(url)
         r.raise_for_status()
         html = BeautifulSoup(r.text, 'html.parser')
@@ -92,10 +92,10 @@ def check_page(id):
             html.find(attrs={"name": "description"}).get('content') if html.find(attrs={"name": "description"}) else None
         )
         flash('Страница успешно проверена', 'success')
-        return redirect(url_for('render_url_page', id=id))
     except requests.exceptions.HTTPError as e:
         flash(f'Произошла ошибка при проверке: {e}', 'danger')
-        return redirect(url_for('render_url_page', id=id))
     except Exception as e:
         flash(f'Произошла ошибка при проверке: {e}', 'danger')
+    finally:
+        conn.close()
         return redirect(url_for('render_url_page', id=id))
