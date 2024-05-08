@@ -77,7 +77,6 @@ def get_url_by_id(id, conn):
         query = 'SELECT name FROM urls WHERE id=%s'
         cursor.execute(query, (id,))
         result = cursor.fetchone()[0]
-    conn.close()
     return result
 
 
