@@ -29,15 +29,13 @@ def index_page():
 
 @app.get('/urls')
 def render_add_page():
-    conn = db.connect_db()
-    urls = db.retrieve_page(conn)
+    urls = db.retrieve_page()
     normalized_urls = normalize_data(urls)
     return render_template('urls.html', urls=normalized_urls)
 
 
 @app.post('/urls')
 def add_page():
-    conn = db.connect_db()
     url = normalize_url()[0]
     url_max_len = 255
     id = db.retrieve_id()
