@@ -77,12 +77,14 @@ def render_url_page(id):
 
 @app.post('/urls/<int:id>/checks')
 def check_page(id):
+    conn = db.connect_db()
     url = db.get_url_by_id(id)
     try:
         r = requests.get(url)
         r.raise_for_status()
         html = BeautifulSoup(r.text, 'html.parser')
         db.insert_url_check(
+            conn,
             id,
             r.status_code,
             html.h1.string if html.h1 else None,
