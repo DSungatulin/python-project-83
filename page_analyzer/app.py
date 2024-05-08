@@ -78,7 +78,7 @@ def render_url_page(id):
 @app.post('/urls/<int:id>/checks')
 def check_page(id):
     conn = db.connect_db()
-    url = db.get_url_by_id(conn, id)
+    url = db.get_url_by_id(id, conn)
     try:
         r = requests.get(url)
         r.raise_for_status()
