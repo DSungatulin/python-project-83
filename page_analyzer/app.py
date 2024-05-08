@@ -89,10 +89,13 @@ def check_page(id):
             r.status_code,
             html.h1.string if html.h1 else None,
             html.title.string if html.title else None,
-            html.find(attrs={"name": "description"})('content') if html.find(attrs={"name": "description"}) else None
+            html.find(attrs={"name": "description"}).get('content') if html.find(attrs={"name": "description"}) else None
         )
         flash('Страница успешно проверена', 'success')
         return redirect(url_for('render_url_page', id=id))
-    except (requests.exceptions.HTTPError, Exception):
-        flash('Произошла ошибка при проверке', 'danger')
+    except requests.exceptions.HTTPError as e:
+        flash(f'Произошла ошибка при проверке: {e}', 'danger')
+        return redirect(url_for('render_url_page', id=id))
+    except Exception as e:
+        flash(f'Произошла ошибка при проверке: {e}', 'danger')
         return redirect(url_for('render_url_page', id=id))
