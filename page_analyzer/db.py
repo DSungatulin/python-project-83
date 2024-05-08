@@ -74,7 +74,8 @@ def get_url_checks(id):
 
 def get_url_by_id(id, conn):
     with conn.cursor() as cursor:
-        cursor.execute('SELECT name FROM urls WHERE id=%s', (id,))
+        query = 'SELECT name FROM urls WHERE id=%s'
+        cursor.execute(query, (id,))
         return cursor.fetchone()[0]
 
 
