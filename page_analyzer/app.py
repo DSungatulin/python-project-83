@@ -40,7 +40,7 @@ def add_page():
     conn = db.connect_db()
     url = normalize_url()[0]
     url_max_len = 255
-    id = db.retrieve_id()
+    id = db.retrieve_id(conn)
 
     if not validators.url(url) or len(url) > url_max_len:
         if len(url) > url_max_len:
