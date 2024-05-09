@@ -63,11 +63,15 @@ def get_url_details(id):
     return url_details
 
 
-def get_url_checks(id):
-    conn = connect_db()
+def get_url_checks(id, conn):
     with conn.cursor() as cursor:
-        cursor.execute("""SELECT id, status_code, h1, title, description, created_at
-                          FROM url_checks WHERE url_id=%s ORDER BY id DESC""", (id,))
+        query = """
+                SELECT id, status_code, h1, title, description, created_at
+                FROM url_checks
+                WHERE url_id = %s
+                ORDER BY id DESC
+                """
+        cursor.execute(query, (id,))
         checks = cursor.fetchall()
     return checks
 
@@ -82,10 +86,11 @@ def get_url_by_id(id, conn):
 
 def insert_url_check(conn, id, status_code, h1, title, description):
     with conn.cursor() as cursor:
-        cursor.execute(
-            """INSERT INTO url_checks
+        query = """
+            INSERT INTO url_checks
             (url_id, status_code, h1, title, description, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s);""",
-            (id, status_code, h1, title, description, date.today())
-        )
+            VALUES (%s, %s, %s, %s, %s, %s);
+        """
+        values = (id, status_code, h1, title, description, date.today())
+        cursor.execute(query, values)
     conn.commit()
