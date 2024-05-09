@@ -94,10 +94,10 @@ def check_page(id):
             html.find(attrs={"name": "description"}).get('content') if html.find(attrs={"name": "description"}) else None
         )
         flash('Страница успешно проверена', 'success')
-    except requests.exceptions.HTTPError as e:
-        flash(f'Произошла ошибка при проверке: {e}', 'danger')
-    except Exception as e:
-        flash(f'Произошла ошибка при проверке: {e}', 'danger')
+    except requests.exceptions.HTTPError:
+        flash('Произошла ошибка при проверке', 'danger')
+    except Exception:
+        flash('Произошла ошибка при проверке', 'danger')
     finally:
         conn.close()
         return redirect(url_for('render_url_page', id=id))
