@@ -40,16 +40,12 @@ def retrieve_id():
         return id
 
 
-def check_db_data():
-    conn = connect_db()
+def check_db_data(conn):
     with conn.cursor() as cursor:
-        id = retrieve_id()
         url = normalize_url()[1]
-        cursor.execute(
-            "INSERT INTO urls (name, created_at) VALUES (%s, %s);",
-            (url, date.today())
-        )
-        cursor.execute('SELECT id FROM urls WHERE name=%s', (url,))
+        query = "INSERT INTO urls (name, created_at) VALUES (%s, %s) RETURNING id;"
+        values = (url, date.today())
+        cursor.execute(query, values)
         id = cursor.fetchone()[0]
         conn.commit()
     return id
