@@ -29,10 +29,13 @@ def index_page():
 
 @app.get('/urls')
 def render_add_page():
-    conn = db.connect_db()
-    urls = db.retrieve_page(conn)
-    normalized_urls = normalize_data(urls)
-    return render_template('urls.html', urls=normalized_urls)
+    try:
+        conn = db.connect_db()
+        urls = db.retrieve_page(conn)
+        normalized_urls = normalize_data(urls)
+        return render_template('urls.html', urls=normalized_urls)
+    finally:
+        conn.close()
 
 
 @app.post('/urls')
