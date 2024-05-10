@@ -13,8 +13,8 @@ load_dotenv()
 DATABASE_URL = os.getenv('DATABASE_URL')
 
 
-def connect_db(database_url):
-    with psycopg2.connect(database_url) as conn:
+def connect_db():
+    with psycopg2.connect(DATABASE_URL) as conn:
         return conn
 
 
