@@ -7,15 +7,15 @@ import psycopg2
 import os
 
 
-DATABASE_URL = os.getenv('DATABASE_URL')
-
-
 load_dotenv()
 
 
-def connect_db():
-    conn = psycopg2.connect(DATABASE_URL)
-    return conn
+DATABASE_URL = os.getenv('DATABASE_URL')
+
+
+def connect_db(database_url):
+    with psycopg2.connect(database_url) as conn:
+        return conn
 
 
 def retrieve_page(conn):
@@ -29,8 +29,7 @@ def retrieve_page(conn):
         """
         cursor.execute(query)
         urls = cursor.fetchall()
-    conn.close()
-    return urls
+        return urls
 
 
 def retrieve_id(conn):
