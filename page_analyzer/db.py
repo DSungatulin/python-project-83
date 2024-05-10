@@ -29,7 +29,8 @@ def retrieve_page(conn):
         """
         cursor.execute(query)
         urls = cursor.fetchall()
-        return urls
+    conn.close()
+    return urls
 
 
 def retrieve_id(conn):
